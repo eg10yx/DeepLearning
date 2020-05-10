@@ -15,8 +15,8 @@ class Linear(Module):
         self.weights = empty(hidden_layers, input_size).uniform_(-1, 1)
         self.biases = empty(hidden_layers).uniform_(-1, 1)
 
-        self.weights_gradients = [empty(hidden_layers, input_size).zero_()]
-        self.biases_gradients = [empty(hidden_layers).zero_()]
+        self.weights_gradients = empty(hidden_layers, input_size).zero_()
+        self.biases_gradients = empty(hidden_layers).zero_()
 
 
     def forward(self, input_tensor):
@@ -59,3 +59,4 @@ class Linear(Module):
 
     def summary(self):
         print('\tFully connected layer of {} hidden units'.format(self.hidden_layer_size))
+        
