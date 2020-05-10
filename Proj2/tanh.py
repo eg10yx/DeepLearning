@@ -19,7 +19,7 @@ class Tanh(Module):
         self.output = input_tensor.apply_(tanh)
         return self.output
 
-    def backward(self, grad_output, step_size=None, momentum=None):
+    def backward(self, grad_output):
 
         diff = 1 - self.output * self.output
         self.grad_input = grad_output * diff

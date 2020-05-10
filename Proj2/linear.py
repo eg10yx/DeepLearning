@@ -25,18 +25,14 @@ class Linear(Module):
         self.output = self.weights @ input_tensor + self.biases
         return self.output
 
-    def backward(self, grad_output, momentum=None):
+    def backward(self, grad_output):
         
         grad_input = self.weights.transpose(0, 1) @ grad_output
         biases_gradients = grad_output
         weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
 
-        if momentum is None:
-            self.biases_gradients.append(biases_gradients)
-            self.weights_gradients.append(weights_gradients)
-        else:
-            self.biases_gradients.append(momentum * self.biases_gradients[-1] + (1-momentum) * biases_gradients)
-            self.weights_gradients.append(momentum * self.weights_gradients[-1] + (1-momentum) * weights_gradients)
+        self.biases_gradients.append(self.biases_gradients[-1] +  biases_gradients)
+        self.weights_gradients.append(self.weights_gradients[-1] + weights_gradients)
 
         return grad_input
 

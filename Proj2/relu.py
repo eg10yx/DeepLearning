@@ -19,7 +19,7 @@ class ReLU(Module):
         self.output[input_tensor < 0] = 0
         return self.output
 
-    def backward(self, grad_output, step_size=None, momentum=None):
+    def backward(self, grad_output):
 
         diff = self.output
         diff[diff != 0] = 1
