@@ -1,8 +1,8 @@
 import torch
 from torch import empty
-
+from random import shuffle
+from torch import cat
 torch.set_grad_enabled(False)
-
 class Sequential:
     def __init__(self, loss, input_size):
 
@@ -31,22 +31,28 @@ class Sequential:
         for layer in self.layers:
             layer.gradient_step(step_size)
 
-    def fit(self, x_train, y_train, x_test, y_test, epochs=100, batch_size=1, step_size=0.1,):
-
-        history = defaultdict(list)
+    def fit(self, x_train, y_train, x_test, y_test, epochs=100, batch_size=1, step_size=0.1, shuffled=True):
+        
+        history = dict(train_loss=[], test_loss=[], train_acc=[], test_acc=[])
 
         for epoch in range(1, epochs+1):
             # shuffle indexes in order for GD to look at samples in random order
             idx = list(range(x_train.shape[0]))
-            shuffle(idx)
-
+            
+            if shuffled == True:
+                shuffle(idx)
+            
             batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
+                
             for batch in batches:
+
                 # Forward-pass
-                outputs = empty()
-                targets = empty()
+                outputs = empty(batch_size, dtype=torch.double)
+                targets = empty(batch_size, dtype=torch.double)
+                print(outputs.shape)
                 for i in batch:
                     output = self.forward(x_train[i])
+                    print(output.shape)
                     outputs = cat((outputs, output.view(1, -1)), 0)
                     targets = cat((targets, y_train[i].view(1, -1)), 0)
 
@@ -55,27 +61,38 @@ class Sequential:
                 self.gradient_step(step_size)
 
             step_size = step_size * 0.9
-
-            tr_predictions, tr_loss = self.predict(x_train, y_train)
-            tr_accuracy = (tr_predictions == y_train).sum() / y_train.shape[1] / tr_predictions.shape[0]
-            history['tr_loss'].append(tr_loss.mean())
-            history['tr_acc'].append(tr_accuracy)
-
-            val_predictions, val_loss = self.predict(x_test, y_test)
-            val_accuracy = (val_predictions == y_test).sum() / y_test.shape[1] / val_predictions.shape[0]
-            history['val_loss'].append(val_loss.mean())
-            history['val_acc'].append(val_accuracy)
-            print('Loss at epoch {} : {}'.format(epoch, tr_loss.mean()))
-
-        print('\nTraining loss : {}'.format(history['tr_loss'][-1]))
-        print('Training accuracy : {}\n'.format(history['tr_acc'][-1]))
-
-        print('Test loss : {}'.format(history['val_loss'][-1]))
-        print('Test accuracy : {}'.format(history['val_acc'][-1]))
-
+            
+            history = self.evaluate(x_train, y_train, history, 'train')
+            history = self.evaluate(x_train, y_train, history, 'test')
+        
         return history
 
 
+    def evaluate(self, x,  y, history, split):
+        
+        output_size = self.layers[-1].get_hidden_size()
+        predictions = empty(x.shape[0], output_size, dtype=torch.double).zero_()
+
+        for i in range(x.shape[0]):
+            predictions[i] = self.forward(x[i])
+        
+        loss = self.loss.compute_loss(predictions, y)
+        _, ind = predictions.max(1)
+        predictions = empty(predictions.shape, dtype=torch.double).zero_().scatter_(1, ind.view(-1, 1), 1)
+        accuracy = (predictions == y).sum() / y.shape[1] / predictions.shape[0]
+        
+        if split == 'train':
+            history['train_loss'].append(loss.mean())
+            history['train_acc'].append(accuracy)
+            print('\ntrain loss: {}, train acc: {}'.format(loss.mean, accuracy))
+        else:
+            history['test_loss'].append(loss.mean())
+            history['test_acc'].append(accuracy)
+            print('\ntest loss: {}, test acc: {}\n\n'.format(loss.mean, accuracy))
+        
+        return history
+            
+        
     def summary(self):
         print('Model with {} layers'.format(len(self.layers)))
         print('\tInput size : {}'.format(self.input_size))

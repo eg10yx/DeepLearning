@@ -9,9 +9,9 @@ class ReLU(Module):
     def __init__(self, input_size):
 
         self.hidden_layer_size = input_size
-        self.input = empty(input_size)
-        self.output = empty(input_size)
-        self.grad_input = empty(input_size)
+        self.input = empty(input_size, dtype=torch.double)
+        self.output = empty(input_size, dtype=torch.double)
+        self.grad_input = empty(input_size, dtype=torch.double)
 
     def forward(self, input_tensor):
 

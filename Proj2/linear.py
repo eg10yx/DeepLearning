@@ -9,14 +9,14 @@ class Linear(Module):
         
         self.input_size = input_size
         self.hidden_layer_size = hidden_layers
-        self.input = empty(input_size)
-        self.output = empty(hidden_layers)
+        self.input = empty(input_size, dtype=torch.double)
+        self.output = empty(hidden_layers, dtype=torch.double)
 
-        self.weights = empty(hidden_layers, input_size).uniform_(-1, 1)
-        self.biases = empty(hidden_layers).uniform_(-1, 1)
+        self.weights = empty(hidden_layers, input_size, dtype=torch.double).uniform_(-1, 1)
+        self.biases = empty(hidden_layers, dtype=torch.double).uniform_(-1, 1)
 
-        self.weights_gradients = empty(hidden_layers, input_size).zero_()
-        self.biases_gradients = empty(hidden_layers).zero_()
+        self.weights_gradients = empty(hidden_layers, input_size, dtype=torch.double).zero_()
+        self.biases_gradients = empty(hidden_layers, dtype=torch.double).zero_()
 
 
     def forward(self, input_tensor):
