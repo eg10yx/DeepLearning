@@ -10,10 +10,13 @@ from losses import MSE
 
 def build_data(n):
 
-    x = empty(n, 2, dtype=torch.double).uniform_(-0.5,0.5)
-    y = x.pow(2).sum(1).sub(1 /(2* math.pi)).sign().mul(-1).add(1).div(2).double()
-    return x, y
-
+    # generate points uniformly at random in [0,1]^2
+    coordinates = torch.FloatTensor(n, 2).uniform_(0, 1)
+    # create labels (shape (n,)
+    labels = ((coordinates - torch.FloatTensor([0.5, 0.5])).norm(p=2, dim=1) < 1 / math.sqrt(2 * math.pi)).type(torch.double)
+    # expand labels to one-hot encoding (shape (n,2)
+    labels = torch.FloatTensor(n, 2).zero_().scatter_(1, labels.view(-1, 1), 1)
+    return coordinates, labels
 
 def build_model():
     model = Sequential(MSE(), input_size=2)
@@ -32,5 +35,4 @@ x_test, y_test = build_data(1000)
 model = build_model()
 model.summary()
 
-history = model.fit(x_train, y_train, x_test, y_test, batch_size=5, epochs=100)
-
+history = model.fit(x_train, y_train, x_test, y_test, batch_size=1, epochs=100)

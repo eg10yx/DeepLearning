@@ -1,4 +1,5 @@
 import torch
+from torch import cat
 from torch import empty
 from module import Module
 
@@ -31,8 +32,8 @@ class Linear(Module):
         biases_gradients = grad_output
         weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
 
-        self.biases_gradients.append(self.biases_gradients[-1] +  biases_gradients)
-        self.weights_gradients.append(self.weights_gradients[-1] + weights_gradients)
+        self.biases_gradients=cat((self.biases_gradients, biases_gradients),0)
+        self.weights_gradients=cat((self.weights_gradients, weights_gradients),0)
 
         return grad_input
 
