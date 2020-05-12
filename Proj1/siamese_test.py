@@ -111,7 +111,7 @@ def compute_nb_parameters(nb_conv_layers, ch_size, k_size, siamese, auxiliary_lo
     return int(nb_params)
 
 # Static hyper-parameters
-nb_epochs, nb_folds = 25, 10
+nb_epochs, nb_folds = 25, 1
 
 # Learning hyper-parameters
 lr, batch_size = 0.2, 100
@@ -136,28 +136,6 @@ train_aux_error = np.zeros_like(loss_tensor)
 test_error = np.zeros_like(loss_tensor)
 test_aux_error = np.zeros_like(loss_tensor)
 
-# Data loading
-# Set seeding for random data and initializations of network
-if Manual:
-    torch.random.manual_seed(100)
-else:
-    torch.random.seed()
-nb_data = 1000
-train_input = torch.empty(nb_folds, nb_data, 2, 14, 14)
-train_target = torch.empty(nb_folds, nb_data, dtype=torch.long)
-train_classes = torch.empty(nb_folds, nb_data, 2, dtype=torch.long)
-test_input = torch.empty(nb_folds, nb_data, 2, 14, 14)
-test_target = torch.empty(nb_folds, nb_data, dtype=torch.long)
-test_classes = torch.empty(nb_folds, nb_data, 2, dtype=torch.long)
-for i in range(nb_folds):
-    train_input[i], train_target[i], train_classes[i], test_input[i], test_target[i], test_classes[i] = generate_pair_sets(nb_data)
-    # Normalization step of the data
-    normalization = True
-    if normalization:
-        mu_train, mu_test = train_input[i].mean(0), test_input[i].mean(0)
-
-        train_input[i].sub_(mu_train).div_(255)
-        test_input[i].sub_(mu_test).div_(255)
 
 ################## TRAINING ##################
 
@@ -173,13 +151,17 @@ for f in range(nb_folds):
     else:
         torch.random.seed()
 
-    #Choice of dataset for this fold
-    fold_train_input = train_input[f]
-    fold_train_target = train_target[f]
-    fold_train_classes = train_classes[f]
-    fold_test_input = test_input[f]
-    fold_test_target = test_target[f]
-    fold_test_classes = test_classes[f]
+    # Data loading
+    nb_data = 1000
+    train_input, train_target, train_classes, test_input, test_target, test_classes = generate_pair_sets(nb_data)
+
+    # Normalization step of the data
+    normalization = True
+    if normalization:
+        mu_train, mu_test = train_input.mean(0), test_input.mean(0)
+
+        train_input.sub_(mu_train).div_(255)
+        test_input.sub_(mu_test).div_(255)
 
     # Model creation and choices of Loss and Optimizer
     model = small_net(siamese, auxiliary_loss, ch_size, k_size, nb_conv_layers)
@@ -191,7 +173,7 @@ for f in range(nb_folds):
         # Set the model to training mode
         model.train()
 
-        for input, target, classes in zip(fold_train_input.split(batch_size), fold_train_target.split(batch_size), fold_train_classes.split(batch_size)):
+        for input, target, classes in zip(train_input.split(batch_size), train_target.split(batch_size), train_classes.split(batch_size)):
 
             # Compute model output
             in1 = input[:, 0, :, :].reshape(input.size(0), 1, 14, 14)
@@ -218,15 +200,15 @@ for f in range(nb_folds):
 
         # Set the model to testing mode to compute test error at current epoch
         model.eval()
-        test_in1 = fold_test_input[:, 0, :, :].reshape(fold_test_input.size(0), 1, 14, 14)
-        test_in2 = fold_test_input[:, 1, :, :].reshape(fold_test_input.size(0), 1, 14, 14)
+        test_in1 = test_input[:, 0, :, :].reshape(test_input.size(0), 1, 14, 14)
+        test_in2 = test_input[:, 1, :, :].reshape(test_input.size(0), 1, 14, 14)
 
         test_preout1, test_preout2, test_output = model(test_in1, test_in2)
-        test_error[e, f] = compute_nb_errors(test_output, fold_test_target)*100/nb_data
+        test_error[e, f] = compute_nb_errors(test_output, test_target)*100/nb_data
 
         if auxiliary_loss:
-            test_aux_error[e, f] += compute_nb_errors(test_preout1, fold_test_classes[:, 0])*100/(2*nb_data)
-            test_aux_error[e, f] += compute_nb_errors(test_preout2, fold_test_classes[:, 1])*100/(2*nb_data)
+            test_aux_error[e, f] += compute_nb_errors(test_preout1, test_classes[:, 0])*100/(2*nb_data)
+            test_aux_error[e, f] += compute_nb_errors(test_preout2, test_classes[:, 1])*100/(2*nb_data)
 
 #Time
 print('Elapsed time: {}s'.format(time.time()-start))
