@@ -47,12 +47,14 @@ class Sequential:
             for batch in batches:
 
                 # Forward-pass
-                outputs = empty(batch_size, dtype=torch.double)
-                targets = empty(batch_size, dtype=torch.double)
+                outputs = empty(1, 2, dtype=torch.double)
+                targets = empty(1, 1, dtype=torch.double)
+                print(targets.shape)
                 print(outputs.shape)
                 for i in batch:
                     output = self.forward(x_train[i])
-                    print(output.shape)
+                    print(y_train[i].view(1, -1).shape)
+                    print(output.view(1, -1).shape)
                     outputs = cat((outputs, output.view(1, -1)), 0)
                     targets = cat((targets, y_train[i].view(1, -1)), 0)
 

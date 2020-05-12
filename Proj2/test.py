@@ -11,7 +11,7 @@ from losses import MSE
 def build_data(n):
 
     x = empty(n, 2, dtype=torch.double).uniform_(-0.5,0.5)
-    y = x.pow(2).sum(1).sub(1 /(2* math.pi)).sign().mul(-1).add(1).div(2).long()
+    y = x.pow(2).sum(1).sub(1 /(2* math.pi)).sign().mul(-1).add(1).div(2).double()
     return x, y
 
 
@@ -32,5 +32,5 @@ x_test, y_test = build_data(1000)
 model = build_model()
 model.summary()
 
-history = model.fit(x_train, y_train, x_test, y_test, batch_size=2, epochs=100)
+history = model.fit(x_train, y_train, x_test, y_test, batch_size=5, epochs=100)
 
