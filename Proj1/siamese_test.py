@@ -22,6 +22,7 @@ class small_net(nn.Module):
         # only two convolutionnal layers give the best result with nb channels: 32-64
 
         """  Create the correct number of convolutional layers and initialize their weights  """
+        
 
         #self.conv0 = nn.Conv2d(1, 32, 5)
         #nn.init.xavier_normal_(self.conv0.weight)
@@ -113,7 +114,7 @@ def compute_nb_parameters(nb_conv_layers, ch_size, k_size, siamese, auxiliary_lo
 nb_epochs, nb_folds = 25, 10
 
 # Learning hyper-parameters
-lr, batch_size = 0.2, 100
+lr, batch_size = 0.25, 100
 
 # Network architecture parameters
 nb_conv_layers = 2
@@ -150,14 +151,13 @@ test_target = torch.empty(nb_folds, nb_data, dtype=torch.long)
 test_classes = torch.empty(nb_folds, nb_data, 2, dtype=torch.long)
 for i in range(nb_folds):
     train_input[i], train_target[i], train_classes[i], test_input[i], test_target[i], test_classes[i] = generate_pair_sets(nb_data)
+    # Normalization step of the data
+    normalization = True
+    if normalization:
+        mu_train, mu_test = train_input[i].mean(0), test_input[i].mean(0)
 
-# Normalization step of the data
-normalization = True
-if normalization:
-    mu_train, mu_test = train_input.mean(0), test_input.mean(0)
-
-    train_input.sub_(mu_train).div_(255)
-    test_input.sub_(mu_test).div_(255)
+        train_input[i].sub_(mu_train).div_(255)
+        test_input[i].sub_(mu_test).div_(255)
 
 ################## TRAINING ##################
 
@@ -194,11 +194,12 @@ for f in range(nb_folds):
         for input, target, classes in zip(fold_train_input.split(batch_size), fold_train_target.split(batch_size), fold_train_classes.split(batch_size)):
 
             # Compute model output
-            preout1, preout2, output = model(input[:, 0, :, :].reshape(input.size(0), 1, 14, 14), input[:, 1, :, :].reshape(input.size(0), 1, 14, 14))
+            in1 = input[:, 0, :, :].reshape(input.size(0), 1, 14, 14)
+            in2 = input[:, 1, :, :].reshape(input.size(0), 1, 14, 14)
+            preout1, preout2, output = model(in1, in2)
             
             # Train the model
             loss = criterion(output, target)
-            #print(loss.size())
             if auxiliary_loss:
                 aux_loss = criterion(preout1, classes[:, 0]) + criterion(preout2, classes[:, 1])
                 loss += aux_loss
@@ -213,7 +214,6 @@ for f in range(nb_folds):
             if auxiliary_loss:
                 train_aux_error[e, f] += compute_nb_errors(preout1, classes[:, 0])*100/(2*nb_data)
                 train_aux_error[e, f] += compute_nb_errors(preout2, classes[:, 1])*100/(2*nb_data)
-
 
 
         # Set the model to testing mode to compute test error at current epoch
