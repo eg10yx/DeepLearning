@@ -38,7 +38,7 @@ class Sequential:
         for epoch in range(1, epochs+1):
             # shuffle indexes in order for GD to look at samples in random order
             idx = list(range(x_train.shape[0]))
-            
+            print(epoch)
             if shuffled == True:
                 shuffle(idx)
             
@@ -49,12 +49,9 @@ class Sequential:
                 # Forward-pass
                 outputs = empty(1, 2, dtype=torch.double)
                 targets = empty(1, 1, dtype=torch.double)
-                print(targets.shape)
-                print(outputs.shape)
+
                 for i in batch:
                     output = self.forward(x_train[i])
-                    print(y_train[i].view(1, -1).shape)
-                    print(output.view(1, -1).shape)
                     outputs = cat((outputs, output.view(1, -1)), 0)
                     targets = cat((targets, y_train[i].view(1, -1)), 0)
 
@@ -72,13 +69,14 @@ class Sequential:
 
     def evaluate(self, x,  y, history, split):
         
-        output_size = self.layers[-1].get_hidden_size()
+        output_size = self.layers[-1].get_hidden_layer_size()
         predictions = empty(x.shape[0], output_size, dtype=torch.double).zero_()
-
+        print(predictions.shape)
+        print(y.shape)
         for i in range(x.shape[0]):
             predictions[i] = self.forward(x[i])
         
-        loss = self.loss.compute_loss(predictions, y)
+        loss = self.loss.compute_loss(predictions.transpose, y)
         _, ind = predictions.max(1)
         predictions = empty(predictions.shape, dtype=torch.double).zero_().scatter_(1, ind.view(-1, 1), 1)
         accuracy = (predictions == y).sum() / y.shape[1] / predictions.shape[0]
