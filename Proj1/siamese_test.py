@@ -114,7 +114,7 @@ def compute_nb_parameters(nb_conv_layers, ch_size, k_size, siamese, auxiliary_lo
 nb_epochs, nb_folds = 25, 10
 
 # Learning hyper-parameters
-lr, batch_size = 0.25, 100
+lr, batch_size = 0.2, 100
 
 # Network architecture parameters
 nb_conv_layers = 2
