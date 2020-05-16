@@ -47,8 +47,10 @@ class Sequential:
             for batch in batches:
 
                 # Forward-pass
-                outputs = empty(1, 2, dtype=torch.double)
-                targets = empty(1, 1, dtype=torch.double)
+                # outputs = empty(1, 2, dtype=torch.float)
+                # targets = empty(1, 2, dtype=torch.float)
+                outputs = torch.FloatTensor()
+                targets = torch.FloatTensor()
 
                 for i in batch:
                     output = self.forward(x_train[i])
@@ -70,25 +72,28 @@ class Sequential:
     def evaluate(self, x,  y, history, split):
         
         output_size = self.layers[-1].get_hidden_layer_size()
-        predictions = empty(x.shape[0], output_size, dtype=torch.double).zero_()
-        print(predictions.shape)
-        print(y.shape)
+        predictions = empty(x.shape[0], output_size, dtype=torch.float).zero_()
+        
+        
         for i in range(x.shape[0]):
             predictions[i] = self.forward(x[i])
+            
+        error = predictions.max(1)[1].ne(y.max(1)[1]).sum()/predictions.size(0)
+        print("Error: {:6.2%}\n".format(error))
         
-        loss = self.loss.compute_loss(predictions.transpose, y)
+        loss = self.loss.compute_loss(predictions, y)
         _, ind = predictions.max(1)
-        predictions = empty(predictions.shape, dtype=torch.double).zero_().scatter_(1, ind.view(-1, 1), 1)
+        predictions = empty(predictions.shape, dtype=torch.float).zero_().scatter_(1, ind.view(-1, 1), 1)
         accuracy = (predictions == y).sum() / y.shape[1] / predictions.shape[0]
-        
+
         if split == 'train':
             history['train_loss'].append(loss.mean())
             history['train_acc'].append(accuracy)
-            print('\ntrain loss: {}, train acc: {}'.format(loss.mean, accuracy))
+            print('\ntrain loss: {}, train acc: {}'.format(loss.mean(), accuracy))
         else:
             history['test_loss'].append(loss.mean())
             history['test_acc'].append(accuracy)
-            print('\ntest loss: {}, test acc: {}\n\n'.format(loss.mean, accuracy))
+            print('\ntest loss: {}, test acc: {}\n\n'.format(loss.mean(), accuracy))
         
         return history
             

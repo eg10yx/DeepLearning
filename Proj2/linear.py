@@ -2,6 +2,7 @@ import torch
 from torch import cat
 from torch import empty
 from module import Module
+import numpy as np
 
 torch.set_grad_enabled(False)
 
@@ -10,20 +11,21 @@ class Linear(Module):
         
         self.input_size = input_size
         self.hidden_layer_size = hidden_layers
-        self.input = empty(input_size, dtype=torch.double)
-        self.output = empty(hidden_layers, dtype=torch.double)
+        self.input = empty(input_size, dtype=torch.float)
+        self.output = empty(hidden_layers, dtype=torch.float)
 
-        self.weights = empty(hidden_layers, input_size, dtype=torch.double).uniform_(-1, 1)
-        self.biases = empty(hidden_layers, dtype=torch.double).uniform_(-1, 1)
+        self.weights = empty(hidden_layers, input_size, dtype=torch.float).uniform_(-1, 1)
+        self.biases = empty(hidden_layers, dtype=torch.float).uniform_(-1, 1)
 
-        self.weights_gradients = empty(hidden_layers, input_size, dtype=torch.double).zero_()
-        self.biases_gradients = empty(hidden_layers, dtype=torch.double).zero_()
+        self.weights_gradients = empty(hidden_layers, input_size, dtype=torch.float).zero_()
+        self.biases_gradients = empty(hidden_layers, dtype=torch.float).zero_()
 
 
     def forward(self, input_tensor):
 
         self.input = input_tensor
         self.output = self.weights @ input_tensor + self.biases
+        #print(self.output)
         return self.output
 
     def backward(self, grad_output):
@@ -31,10 +33,10 @@ class Linear(Module):
         grad_input = self.weights.transpose(0, 1) @ grad_output
         biases_gradients = grad_output
         weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
-
-        self.biases_gradients=cat((self.biases_gradients, biases_gradients),0)
-        self.weights_gradients=cat((self.weights_gradients, weights_gradients),0)
-
+        
+        self.biases_gradients.add_(biases_gradients)
+        self.weights_gradients.add_(weights_gradients)
+        
         return grad_input
 
     def gradient_step(self, step_size):
