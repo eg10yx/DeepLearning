@@ -6,16 +6,14 @@ from linear import Linear
 from relu import ReLU
 from tanh import Tanh
 from losses import MSE
+from plot_functions import plot_history
 
 
 def build_data(n):
 
-    # generate points uniformly at random in [0,1]^2
-    coordinates = torch.FloatTensor(n, 2).uniform_(0, 1)
-    # create labels (shape (n,)
-    labels = ((coordinates - torch.FloatTensor([0.5, 0.5])).norm(p=2, dim=1) < 1 / math.sqrt(2 * math.pi)).type(torch.LongTensor)
-    # expand labels to one-hot encoding (shape (n,2)
-    labels = torch.FloatTensor(n, 2).zero_().scatter_(1, labels.view(-1, 1), 1)
+    coordinates = empty(n, 2, dtype=torch.float).uniform_(0, 1)
+    labels = ((coordinates - torch.Tensor([0.5, 0.5])).norm(p=2, dim=1) < 1 / math.sqrt(2 * math.pi)).type(torch.LongTensor)
+    labels = empty(n, 2, dtype=torch.float).zero_().scatter_(1, labels.view(-1, 1), 1)
     return coordinates, labels
 
 def build_model():
@@ -32,7 +30,11 @@ def build_model():
 
 x_train, y_train = build_data(1000)
 x_test, y_test = build_data(1000)
+
 model = build_model()
+
 model.summary()
-print(y_train)
-history = model.fit(x_train, y_train, x_test, y_test, batch_size=30, epochs=70,step_size=0.01)
+
+history = model.fit(x_train, y_train, x_test, y_test, batch_size=100, epochs=100, step_size=0.01)
+
+plot_history(history, 'a')

@@ -1,8 +1,7 @@
 import torch
-from torch import cat
 from torch import empty
 from module import Module
-import numpy as np
+from torch import cat
 
 torch.set_grad_enabled(False)
 
@@ -17,32 +16,31 @@ class Linear(Module):
         self.weights = empty(hidden_layers, input_size, dtype=torch.float).uniform_(-1, 1)
         self.biases = empty(hidden_layers, dtype=torch.float).uniform_(-1, 1)
 
-        self.weights_gradients = empty(hidden_layers, input_size, dtype=torch.float).zero_()
-        self.biases_gradients = empty(hidden_layers, dtype=torch.float).zero_()
+        self.weights_gradients = empty(self.weights.shape, dtype=torch.float).zero_()
+        self.biases_gradients = empty(self.biases.shape, dtype=torch.float).zero_()
 
 
     def forward(self, input_tensor):
 
         self.input = input_tensor
         self.output = self.weights @ input_tensor + self.biases
-        #print(self.output)
+
         return self.output
 
     def backward(self, grad_output):
         
         grad_input = self.weights.transpose(0, 1) @ grad_output
-        biases_gradients = grad_output
-        weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
-        
-        self.biases_gradients.add_(biases_gradients)
-        self.weights_gradients.add_(weights_gradients)
-        
+    
+        # self.biases_gradients = cat((self.biases_gradients, grad_output), 0)
+        # self.weights_gradients = cat((self.weights_gradients, grad_output.view(-1, 1) @ self.input.view(1, -1)), 0)
+        self.biases_gradients = grad_output
+        self.weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
         return grad_input
 
     def gradient_step(self, step_size):
 
-        self.weights -= step_size * self.weights_gradients[-1]
-        self.biases -= step_size * self.biases_gradients[-1]
+        self.weights -= step_size * self.weights_gradients
+        self.biases -= step_size * self.biases_gradients
 
     def param(self):
 

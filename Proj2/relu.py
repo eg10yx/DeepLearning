@@ -16,7 +16,7 @@ class ReLU(Module):
     def forward(self, input_tensor):
 
         self.output = input_tensor
-        self.output[input_tensor < 0] = 0
+        self.output =torch.clamp(self.output, min=0)
         return self.output
 
     def backward(self, grad_output):

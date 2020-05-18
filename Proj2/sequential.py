@@ -36,35 +36,47 @@ class Sequential:
         history = dict(train_loss=[], test_loss=[], train_acc=[], test_acc=[])
 
         for epoch in range(1, epochs+1):
-            # shuffle indexes in order for GD to look at samples in random order
+
             idx = list(range(x_train.shape[0]))
             print(epoch)
             if shuffled == True:
-                shuffle(idx)
+                 shuffle(idx)
             
-            batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
+            # batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
                 
-            for batch in batches:
+            # for batch in batches:
 
-                # Forward-pass
-                # outputs = empty(1, 2, dtype=torch.float)
-                # targets = empty(1, 2, dtype=torch.float)
-                outputs = torch.FloatTensor()
-                targets = torch.FloatTensor()
+            #     # Forward-pass
+            #     outputs = empty(0, dtype=torch.float)
+            #     targets = empty(0, dtype=torch.float)
 
-                for i in batch:
-                    output = self.forward(x_train[i])
-                    outputs = cat((outputs, output.view(1, -1)), 0)
-                    targets = cat((targets, y_train[i].view(1, -1)), 0)
+            #     for i in batch:
+            #         output = self.forward(x_train[i])
 
-                grad_output = self.loss.compute_grad(outputs, targets)
-                self.backward(grad_output)
-                self.gradient_step(step_size)
+            #         outputs = cat((outputs, output.view(1, -1)), 0)
+            #         targets = cat((targets, y_train[i].view(1, -1)), 0)
 
+            #     grad_output = self.loss.compute_grad(outputs, targets)
+            #     self.backward(grad_output)
+            #     self.gradient_step(step_size)
+
+            # step_size = step_size * 0.9
+            for i in idx:
+                outputs = empty(0, dtype=torch.float)
+                targets = empty(0, dtype=torch.float)
+                
+                output = self.forward(x_train[i])
+                
+                outputs = cat((outputs, output.view(1, -1)), 0)
+                targets = cat((targets, y_train[i].view(1, -1)), 0)
+
+            grad_output = self.loss.compute_grad(output, targets)
+            self.backward(grad_output)
+            self.gradient_step(step_size)
             step_size = step_size * 0.9
-            
+                
             history = self.evaluate(x_train, y_train, history, 'train')
-            history = self.evaluate(x_train, y_train, history, 'test')
+            history = self.evaluate(x_test, y_test, history, 'test')
         
         return history
 
@@ -80,8 +92,9 @@ class Sequential:
             
         error = predictions.max(1)[1].ne(y.max(1)[1]).sum()/predictions.size(0)
         print("Error: {:6.2%}\n".format(error))
-        
+
         loss = self.loss.compute_loss(predictions, y)
+
         _, ind = predictions.max(1)
         predictions = empty(predictions.shape, dtype=torch.float).zero_().scatter_(1, ind.view(-1, 1), 1)
         accuracy = (predictions == y).sum() / y.shape[1] / predictions.shape[0]
