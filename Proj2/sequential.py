@@ -74,7 +74,7 @@ class Sequential:
             predictions[i] = self.forward(x[i])
             
         error = predictions.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predictions.size(0)
-        print("Error: {:6.2%}\n".format(error))
+        #print("Error: {:6.2%}\n".format(error))
 
         loss = self.loss.compute_loss(predictions, y)
 
