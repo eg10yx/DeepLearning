@@ -32,32 +32,35 @@ class Sequential:
         for layer in self.layers:
             layer.gradient_step(step_size)
 
-    def fit(self, x_train, y_train, x_test, y_test, epochs=100, step_size=0.1):
+    def fit(self, x_train, y_train, x_test, y_test, epochs=100, step_size=0.02, batch_size=1):
         
-        history = dict(train_loss=[], test_loss=[], train_acc=[], test_acc=[])
-
+        history = dict(train_loss=[], test_loss=[], train_error=[], test_error=[])
+        
         for epoch in range(1, epochs+1):
-            print('\nepoch number: {}'.format(epoch))
-            
+            print('\nepoch n°: {}'.format(epoch))
             idx = torch.arange(x_train.shape[0])
             shuffle(idx)
-            
-            outputs = empty(0, dtype=torch.float)
-            targets = empty(0, dtype=torch.float)
-            
-            for i in idx:
-                output = self.forward(x_train[i])
-                
-                outputs = cat((outputs, output.view(1, -1)), 0)
-                targets = cat((targets, y_train[i].view(1, -1)), 0)
 
-            grad_output = self.loss.compute_grad(output, targets)
+            batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
             
-            self.backward(grad_output)
-            self.gradient_step(step_size)
+            for batch in batches:
+                # Forward-pass
+                output = empty(0, dtype=torch.float)
+                targets = empty(0, dtype=torch.float)
+                for i in batch:
+                    output_sample = self.forward(x_train[i])
+                    output = cat((output, output_sample.view(1, -1)), 0)
+                    targets = cat((targets, y_train[i].view(1, -1)), 0)
+
+                # Backward-pass
+                grad_output = self.loss.compute_grad(output, targets)
+                self.backward(grad_output)
+
+                # Gradient step
+                self.gradient_step(step_size)
+
+            step_size = step_size * 0.85
             
-            step_size = step_size * 0.9
-                
             history = self.evaluate(x_train, y_train, history, 'train')
             history = self.evaluate(x_test, y_test, history, 'test')
         
@@ -67,29 +70,23 @@ class Sequential:
     def evaluate(self, x,  y, history, split):
         
         output_size = self.layers[-1].get_hidden_layer_size()
-        predictions = empty(x.shape[0], output_size, dtype=torch.float).zero_()
-        
+        predicted_class = empty(x.shape[0], output_size, dtype=torch.float).zero_()
         
         for i in range(x.shape[0]):
-            predictions[i] = self.forward(x[i])
+            predicted_class[i] = self.forward(x[i])
             
-        error = predictions.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predictions.size(0)
-        #print("Error: {:6.2%}\n".format(error))
+        error = predicted_class.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predicted_class.size(0)
 
-        loss = self.loss.compute_loss(predictions, y)
-
-        _, ind = predictions.max(1)
-        predictions = empty(predictions.shape, dtype=torch.float).zero_().scatter_(1, ind.view(-1, 1), 1)
-        accuracy = (predictions == y).sum(dtype=torch.float) / y.shape[1] / predictions.shape[0]
+        loss = self.loss.compute_loss(predicted_class, y)
 
         if split == 'train':
             history['train_loss'].append(loss.mean())
-            history['train_acc'].append(accuracy)
-            print('\ntrain loss: {}, train accuracy: {}'.format(loss.mean(), accuracy))
+            history['train_error'].append(error)
+            print('\ntrain loss: {}, train error: {:6.2%}\n'.format(loss.mean(), error))
         else:
             history['test_loss'].append(loss.mean())
-            history['test_acc'].append(accuracy)
-            print('\ntest loss: {}, test accuracy: {}\n\n'.format(loss.mean(), accuracy))
+            history['test_error'].append(error)
+            print('\ntest loss: {}, test error: {:6.2%}\n\n'.format(loss.mean(), error))
         
         return history
             

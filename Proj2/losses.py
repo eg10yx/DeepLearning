@@ -2,10 +2,10 @@ class MSE:
     def __init__(self):
         pass
 
-    def compute_loss(self, predictions, targets):
+    def compute_loss(self, predicted_class, targets):
 
-        return ((targets-predictions)**2).mean(dim=1)
+        return ((targets-predicted_class)**2).mean(dim=1)
 
-    def compute_grad(self,predictions, targets):
+    def compute_grad(self,predicted_class, targets):
 
-        return (predictions - targets).mean(0)
+        return (predicted_class - targets).mean(0)

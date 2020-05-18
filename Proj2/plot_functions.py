@@ -23,7 +23,7 @@ def plot_history(history, title):
     fig, ax1, ax2 = prepare_standardplot(title, 'epoch')
     ax1.plot(history['train_loss'], label = "training")
     ax1.plot(history['test_loss'], label = "test")
-    ax2.plot(history['train_acc'], label = "training")
-    ax2.plot(history['test_acc'], label = "test")
+    ax2.plot(history['train_error'], label = "training")
+    ax2.plot(history['test_error'], label = "test")
     finalize_standardplot(fig, ax1, ax2)
     return fig

@@ -32,8 +32,8 @@ class Linear(Module):
         
         grad_input = self.weights.transpose(0, 1) @ grad_output
     
-        self.biases_gradients.add_(grad_output)
-        self.weights_gradients.add_(grad_output.view(-1, 1) @ self.input.view(1, -1))
+        self.biases_gradients = grad_output
+        self.weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
         
         return grad_input
 
