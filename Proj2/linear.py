@@ -10,6 +10,7 @@ class Linear(Module):
         
         self.input_size = input_size
         self.hidden_layer_size = hidden_layers
+
         self.input = empty(input_size, dtype=torch.float)
         self.output = empty(hidden_layers, dtype=torch.float)
 
@@ -31,10 +32,9 @@ class Linear(Module):
         
         grad_input = self.weights.transpose(0, 1) @ grad_output
     
-        # self.biases_gradients = cat((self.biases_gradients, grad_output), 0)
-        # self.weights_gradients = cat((self.weights_gradients, grad_output.view(-1, 1) @ self.input.view(1, -1)), 0)
-        self.biases_gradients = grad_output
-        self.weights_gradients = grad_output.view(-1, 1) @ self.input.view(1, -1)
+        self.biases_gradients.add_(grad_output)
+        self.weights_gradients.add_(grad_output.view(-1, 1) @ self.input.view(1, -1))
+        
         return grad_input
 
     def gradient_step(self, step_size):

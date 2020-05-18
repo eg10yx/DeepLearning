@@ -1,5 +1,3 @@
-from torch import empty
-
 class MSE:
     def __init__(self):
         pass

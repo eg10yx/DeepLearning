@@ -15,11 +15,12 @@ class Sequential:
         
         self.layers.append(layer)
 
-    def forward(self, model_input):
+    def forward(self, layer_input):
 
         for layer in self.layers:
-            model_input = layer.forward(model_input)
-        return model_input
+            layer_input = layer.forward(layer_input)
+            
+        return layer_input
 
     def backward(self, grad_output):
 
@@ -31,48 +32,30 @@ class Sequential:
         for layer in self.layers:
             layer.gradient_step(step_size)
 
-    def fit(self, x_train, y_train, x_test, y_test, epochs=100, batch_size=1, step_size=0.1, shuffled=True):
+    def fit(self, x_train, y_train, x_test, y_test, epochs=100, step_size=0.1):
         
         history = dict(train_loss=[], test_loss=[], train_acc=[], test_acc=[])
 
         for epoch in range(1, epochs+1):
-
-            idx = list(range(x_train.shape[0]))
-            print(epoch)
-            if shuffled == True:
-                 shuffle(idx)
+            print('\nepoch number: {}'.format(epoch))
             
-            # batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
-                
-            # for batch in batches:
-
-            #     # Forward-pass
-            #     outputs = empty(0, dtype=torch.float)
-            #     targets = empty(0, dtype=torch.float)
-
-            #     for i in batch:
-            #         output = self.forward(x_train[i])
-
-            #         outputs = cat((outputs, output.view(1, -1)), 0)
-            #         targets = cat((targets, y_train[i].view(1, -1)), 0)
-
-            #     grad_output = self.loss.compute_grad(outputs, targets)
-            #     self.backward(grad_output)
-            #     self.gradient_step(step_size)
-
-            # step_size = step_size * 0.9
+            idx = torch.arange(x_train.shape[0])
+            shuffle(idx)
+            
+            outputs = empty(0, dtype=torch.float)
+            targets = empty(0, dtype=torch.float)
+            
             for i in idx:
-                outputs = empty(0, dtype=torch.float)
-                targets = empty(0, dtype=torch.float)
-                
                 output = self.forward(x_train[i])
                 
                 outputs = cat((outputs, output.view(1, -1)), 0)
                 targets = cat((targets, y_train[i].view(1, -1)), 0)
 
             grad_output = self.loss.compute_grad(output, targets)
+            
             self.backward(grad_output)
             self.gradient_step(step_size)
+            
             step_size = step_size * 0.9
                 
             history = self.evaluate(x_train, y_train, history, 'train')
@@ -90,23 +73,23 @@ class Sequential:
         for i in range(x.shape[0]):
             predictions[i] = self.forward(x[i])
             
-        error = predictions.max(1)[1].ne(y.max(1)[1]).sum()/predictions.size(0)
+        error = predictions.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predictions.size(0)
         print("Error: {:6.2%}\n".format(error))
 
         loss = self.loss.compute_loss(predictions, y)
 
         _, ind = predictions.max(1)
         predictions = empty(predictions.shape, dtype=torch.float).zero_().scatter_(1, ind.view(-1, 1), 1)
-        accuracy = (predictions == y).sum() / y.shape[1] / predictions.shape[0]
+        accuracy = (predictions == y).sum(dtype=torch.float) / y.shape[1] / predictions.shape[0]
 
         if split == 'train':
             history['train_loss'].append(loss.mean())
             history['train_acc'].append(accuracy)
-            print('\ntrain loss: {}, train acc: {}'.format(loss.mean(), accuracy))
+            print('\ntrain loss: {}, train accuracy: {}'.format(loss.mean(), accuracy))
         else:
             history['test_loss'].append(loss.mean())
             history['test_acc'].append(accuracy)
-            print('\ntest loss: {}, test acc: {}\n\n'.format(loss.mean(), accuracy))
+            print('\ntest loss: {}, test accuracy: {}\n\n'.format(loss.mean(), accuracy))
         
         return history
             
