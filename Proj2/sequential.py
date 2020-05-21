@@ -1,15 +1,15 @@
 import torch
 from torch import empty
 from random import shuffle
-from torch import cat
+
 torch.set_grad_enabled(False)
+
 class Sequential:
     def __init__(self, loss, input_size):
 
         self.loss = loss
         self.input_size = input_size
         self.layers = []
-
 
     def add_layer(self, layer):
         
@@ -32,31 +32,32 @@ class Sequential:
         for layer in self.layers:
             layer.gradient_step(step_size)
 
-    def fit(self, x_train, y_train, x_test, y_test, epochs=100, step_size=0.02, batch_size=1):
+    def fit(self, x_train, y_train, x_test, y_test, epochs=100, step_size=0.02):
+        """
+        Train and test the model for each epoch.
+        The reducing step size help to converge more precisely
         
+        """
         history = dict(train_loss=[], test_loss=[], train_error=[], test_error=[])
         
         for epoch in range(1, epochs+1):
             print('\nepoch n°: {}'.format(epoch))
+            
             idx = torch.arange(x_train.shape[0])
             shuffle(idx)
-
-            batches = [idx[i:i+batch_size] for i in range(0, len(idx), batch_size)]
             
-            for batch in batches:
-                # Forward-pass
-                output = empty(0, dtype=torch.float)
-                targets = empty(0, dtype=torch.float)
-                for i in batch:
-                    output_sample = self.forward(x_train[i])
-                    output = cat((output, output_sample.view(1, -1)), 0)
-                    targets = cat((targets, y_train[i].view(1, -1)), 0)
+            output = empty((1,2), dtype=torch.float)
+            target = empty((1,2), dtype=torch.float)
+            
+            for i in idx:
 
-                # Backward-pass
-                grad_output = self.loss.compute_grad(output, targets)
+                output[0] = self.forward(x_train[i])
+                target[0] = y_train[i]
+
+                grad_output = self.loss.compute_grad(output, target)
+                
                 self.backward(grad_output)
 
-                # Gradient step
                 self.gradient_step(step_size)
 
             step_size = step_size * 0.85
@@ -68,8 +69,11 @@ class Sequential:
 
 
     def evaluate(self, x,  y, history, split):
+        """
+        Compute Loss and error and add them to the history dictionary for further plot
         
-        output_size = self.layers[-1].get_hidden_layer_size()
+        """
+        output_size = self.layers[-1].get_number_of_hidden_unit()
         predicted_class = empty(x.shape[0], output_size, dtype=torch.float).zero_()
         
         for i in range(x.shape[0]):
@@ -81,11 +85,12 @@ class Sequential:
 
         if split == 'train':
             history['train_loss'].append(loss.mean())
-            history['train_error'].append(error)
+            history['train_error'].append(error*100)
             print('\ntrain loss: {}, train error: {:6.2%}\n'.format(loss.mean(), error))
-        else:
+            
+        elif split == 'test':
             history['test_loss'].append(loss.mean())
-            history['test_error'].append(error)
+            history['test_error'].append(error*100)
             print('\ntest loss: {}, test error: {:6.2%}\n\n'.format(loss.mean(), error))
         
         return history
@@ -96,4 +101,4 @@ class Sequential:
         print('\tInput size : {}'.format(self.input_size))
         for layer in self.layers[:-1]:
             layer.summary()
-        print('\t{} fully connected output units'.format(self.layers[-1].get_hidden_layer_size()))
+        print('\t{} fully connected output units'.format(self.layers[-1].get_number_of_hidden_unit()))

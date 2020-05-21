@@ -5,7 +5,7 @@ def prepare_standardplot(title, xlabel):
     fig.suptitle(title)
     ax1.set_ylabel('MSE')
     ax1.set_xlabel(xlabel)
-    ax2.set_ylabel('accuracy [% correct]')
+    ax2.set_ylabel('Error [% incorrect]')
     ax2.set_xlabel(xlabel)
     return fig, ax1, ax2
 

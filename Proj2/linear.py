@@ -1,21 +1,20 @@
 import torch
 from torch import empty
 from module import Module
-from torch import cat
 
 torch.set_grad_enabled(False)
 
 class Linear(Module):
-    def __init__(self, input_size, hidden_layers):
+    def __init__(self, input_size, hidden_unit):
         
         self.input_size = input_size
-        self.hidden_layer_size = hidden_layers
+        self.number_of_hidden_unit = hidden_unit
 
         self.input = empty(input_size, dtype=torch.float)
-        self.output = empty(hidden_layers, dtype=torch.float)
+        self.output = empty(hidden_unit, dtype=torch.float)
 
-        self.weights = empty(hidden_layers, input_size, dtype=torch.float).uniform_(-1, 1)
-        self.biases = empty(hidden_layers, dtype=torch.float).uniform_(-1, 1)
+        self.weights = empty(hidden_unit, input_size, dtype=torch.float).uniform_(-1, 1)
+        self.biases = empty(hidden_unit, dtype=torch.float).uniform_(-1, 1)
 
         self.weights_gradients = empty(self.weights.shape, dtype=torch.float).zero_()
         self.biases_gradients = empty(self.biases.shape, dtype=torch.float).zero_()
@@ -44,16 +43,16 @@ class Linear(Module):
 
     def param(self):
 
-        return [(self.weights[i, :], self.weights_gradients[i, :]) for i in range(self.hidden_layer_size)] + [(self.biases, self.biases_gradients)]
+        return [(self.weights[i, :], self.weights_gradients[i, :]) for i in range(self.number_of_hidden_unit)] + [(self.biases, self.biases_gradients)]
 
-    def get_hidden_layer_size(self):
+    def get_number_of_hidden_unit(self):
 
-        return self.hidden_layer_size
+        return self.number_of_hidden_unit
 
     def get_input_size(self):
 
         return self.input_size
 
     def summary(self):
-        print('\tFully connected layer of {} hidden units'.format(self.hidden_layer_size))
+        print('\tFully connected layer of {} hidden units'.format(self.number_of_hidden_unit))
         

@@ -8,7 +8,7 @@ class ReLU(Module):
 
     def __init__(self, input_size):
 
-        self.hidden_layer_size = input_size
+        self.number_of_hidden_unit = input_size
         self.input = empty(input_size, dtype=torch.float)
         self.output = empty(input_size, dtype=torch.float)
         self.grad_input = empty(input_size, dtype=torch.float)
@@ -34,13 +34,13 @@ class ReLU(Module):
 
         return []
 
-    def get_hidden_layer_size(self):
+    def get_number_of_hidden_unit(self):
 
-        return self.hidden_layer_size
+        return self.number_of_hidden_unit
 
     def get_input_size(self):
 
-        return self.hidden_layer_size
+        return self.number_of_hidden_unit
 
     def summary(self):
-        print('\tReLU activation layer of size {}'.format(self.hidden_layer_size))
+        print('\tReLU activation layer of size {}'.format(self.number_of_hidden_unit))

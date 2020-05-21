@@ -35,6 +35,6 @@ model = build_model()
 
 model.summary()
 
-history = model.fit(x_train, y_train, x_test, y_test, epochs=100)
+history = model.fit(x_train, y_train, x_test, y_test, epochs=60)
 
-plot_history(history, 'Loss and Error')
+plot_history(history, 'Network with two input units, two output units, three hidden layers of 25 units')
