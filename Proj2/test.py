@@ -16,6 +16,7 @@ def build_data(n):
     labels = empty(n, 2, dtype=torch.float).zero_().scatter_(1, labels.view(-1, 1), 1)
     return coordinates, labels
 
+
 def build_model():
     model = Sequential(MSE(), input_size=2)
     model.add_layer(Linear(2, 25))
