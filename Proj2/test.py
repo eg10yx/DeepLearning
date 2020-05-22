@@ -6,11 +6,11 @@ from sequential import Sequential
 from linear import Linear
 from relu import ReLU
 from tanh import Tanh
-from losses import MSE
+from loss import MSE
 from plot_functions import plot_history
 
 
-def build_data(n):
+def generate_data(n):
 
     coordinates = empty(n, 2, dtype=torch.float).uniform_(0, 1)
     labels = ((coordinates - torch.Tensor([0.5, 0.5])).norm(p=2, dim=1) < 1 / math.sqrt(2 * math.pi)).type(torch.LongTensor)
@@ -30,8 +30,8 @@ def build_model():
     return model
 
 
-x_train, y_train = build_data(1000)
-x_test, y_test = build_data(1000)
+x_train, y_train = generate_data(1000)
+x_test, y_test = generate_data(1000)
 
 model = build_model()
 

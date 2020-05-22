@@ -46,15 +46,15 @@ class Sequential:
             idx = torch.arange(x_train.shape[0])
             shuffle(idx)
             
-            output = empty((1,2), dtype=torch.float)
-            target = empty((1,2), dtype=torch.float)
+            predicted_label = empty((1,2), dtype=torch.float)
+            label = empty((1,2), dtype=torch.float)
             
             for i in idx:
 
-                output[0] = self.forward(x_train[i])
-                target[0] = y_train[i]
+                predicted_label[0] = self.forward(x_train[i])
+                label[0] = y_train[i]
 
-                grad_output = self.loss.compute_grad(output, target)
+                grad_output = self.loss.compute_grad(predicted_label, label)
                 
                 self.backward(grad_output)
 
@@ -74,14 +74,14 @@ class Sequential:
         
         """
         output_size = self.layers[-1].get_number_of_hidden_unit()
-        predicted_class = empty(x.shape[0], output_size, dtype=torch.float).zero_()
+        predicted_label = empty(x.shape[0], output_size, dtype=torch.float).zero_()
         
         for i in range(x.shape[0]):
-            predicted_class[i] = self.forward(x[i])
+            predicted_label[i] = self.forward(x[i])
             
-        error = predicted_class.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predicted_class.size(0)
+        error = predicted_label.max(1)[1].ne(y.max(1)[1]).sum(dtype=torch.float)/predicted_label.size(0)
 
-        loss = self.loss.compute_loss(predicted_class, y)
+        loss = self.loss.compute_loss(predicted_label, y)
 
         if split == 'train':
             history['train_loss'].append(loss.mean())
