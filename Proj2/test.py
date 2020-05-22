@@ -1,5 +1,6 @@
 import math
 import torch
+import matplotlib.pyplot as plt
 from torch import empty
 from sequential import Sequential
 from linear import Linear
@@ -39,3 +40,4 @@ model.summary()
 history = model.fit(x_train, y_train, x_test, y_test, epochs=60)
 
 plot_history(history, 'Network with two input units, two output units, three hidden layers of 25 units')
+plt.show()
