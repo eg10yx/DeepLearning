@@ -66,14 +66,12 @@ def plot_errorbar(test_err_mean, test_err_std, nb_folds, nb_epochs, siamese, aux
     plt.errorbar(np.arange(5, nb_epochs+1, 1), test_err_mean[4:], yerr=test_err_std[4:], linewidth=2.0,
                 label=label, elinewidth=1.0, lolims=True, uplims=True, errorevery=5, color=color
                 )
-    if index:
-        if index > 5:
-            plt.title('Evolution over {} folds of average loss of the different models'.format(nb_folds))
-        plt.title('Evolution over {} folds of average test error'.format(nb_folds))
-    else:
-        plt.title('Evolution over {} folds of average final train and test error for model siamese = {}, aux. loss = {}'.format(nb_folds, siamese, aux_loss))
+
     plt.xlabel('Epochs')
-    plt.ylabel('Error in %')
+    if index and index > 3:
+        plt.ylabel('Loss')
+    else:
+        plt.ylabel('Error in %')
     plt.legend()
 
     pass
